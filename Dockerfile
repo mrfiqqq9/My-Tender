@@ -1,5 +1,6 @@
 FROM php:8.3-apache
 
+# Install required extensions
 RUN apt-get update && apt-get install -y \
     libicu-dev \
     zip \
@@ -7,22 +8,20 @@ RUN apt-get update && apt-get install -y \
     git \
     && docker-php-ext-install intl pdo pdo_mysql
 
-# 🔥 FORCE CLEAN MPM
-RUN a2dismod mpm_event || true \
-    && a2dismod mpm_worker || true \
-    && a2dismod mpm_prefork || true \
-    && a2enmod mpm_prefork \
-    && a2enmod rewrite
+# Enable mod_rewrite only
+RUN a2enmod rewrite
 
+# Set working directory
 WORKDIR /var/www/html
 
+# Copy project files
 COPY . /var/www/html
 
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
+# Permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
-
-EXPOSE 80
