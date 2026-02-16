@@ -1,20 +1,24 @@
 FROM php:8.3-apache
 
+# Install required PHP extensions
 RUN apt-get update && apt-get install -y \
     libicu-dev \
-    git \
-    unzip \
-    zip \
     && docker-php-ext-install intl pdo pdo_mysql
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Enable Apache rewrite
+RUN a2enmod rewrite
+
+# Set document root to CakePHP webroot
+ENV APACHE_DOCUMENT_ROOT /var/www/html/webroot
+
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
+    /etc/apache2/sites-available/*.conf
 
 WORKDIR /var/www/html
+
 COPY . .
 
-RUN composer install --optimize-autoloader --no-interaction
-
 RUN chown -R www-data:www-data /var/www/html \
-    && a2enmod rewrite
+    && chmod -R 755 /var/www/html
 
 EXPOSE 80
