@@ -22,6 +22,6 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Permissions
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
