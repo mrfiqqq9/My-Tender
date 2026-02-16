@@ -7,8 +7,12 @@ RUN apt-get update && apt-get install -y \
     git \
     && docker-php-ext-install intl pdo pdo_mysql
 
-# Enable rewrite only
-RUN a2enmod rewrite
+# 🔥 FORCE CLEAN MPM
+RUN a2dismod mpm_event || true \
+    && a2dismod mpm_worker || true \
+    && a2dismod mpm_prefork || true \
+    && a2enmod mpm_prefork \
+    && a2enmod rewrite
 
 WORKDIR /var/www/html
 
