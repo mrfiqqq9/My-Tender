@@ -1,19 +1,20 @@
-FROM php:8.2-apache
+FROM php:8.3-apache
 
-RUN docker-php-ext-install intl pdo pdo_mysql
+RUN apt-get update && apt-get install -y \
+    libicu-dev \
+    git \
+    unzip \
+    zip \
+    && docker-php-ext-install intl pdo pdo_mysql
 
-RUN a2enmod rewrite
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
-
 COPY . .
 
-RUN chown -R www-data:www-data /var/www/html
+RUN composer install --optimize-autoloader --no-interaction
 
-RUN apt-get update && apt-get install -y unzip git \
-    && curl -sS https://getcomposer.org/installer | php \
-    && mv composer.phar /usr/local/bin/composer
-
-RUN composer install --no-dev --optimize-autoloader
+RUN chown -R www-data:www-data /var/www/html \
+    && a2enmod rewrite
 
 EXPOSE 80
